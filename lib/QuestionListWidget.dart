@@ -19,19 +19,20 @@ class QuestionListWidget extends StatefulWidget {
 }
 
 class _QuestionListWidgetState extends State<QuestionListWidget> {
-  late List<Question> questions;// 0-29
+  late List<Question> questions;
   late Map<int, SelectedAnswer> selectedAnswersMap;
-  late int indexOfQuestion;
+  late int currentQuestionIndex;
   late Attempt attempt;
   late int remainingSeconds;
   Timer? _timer;
+  bool isExamCompleted = false;
 
   @override
   void initState() {
     super.initState();
     questions = QuestionData().getQuestionsByExamId(widget.examId);
     selectedAnswersMap = {};
-    indexOfQuestion = 0;
+    currentQuestionIndex = 0;
     attempt = Attempt(questions, [], widget.examId);
     remainingSeconds = widget.duration;
     _startCountdown();
@@ -45,25 +46,33 @@ class _QuestionListWidgetState extends State<QuestionListWidget> {
 
   void onSelect(String selectedLabel, Question question) {
     setState(() {
-      selectedAnswersMap[indexOfQuestion] = SelectedAnswer(
+      selectedAnswersMap[currentQuestionIndex] = SelectedAnswer(
         questionId: question.questionId,
         selectedAnswer: selectedLabel,
         examId: widget.examId,
         isCorrect: false,
       );
-      if (indexOfQuestion < 30) {
-        indexOfQuestion++;
+      if (currentQuestionIndex < questions.length - 1) {
+        currentQuestionIndex++;
+      } else {
+        isExamCompleted = true;
       }
     });
   }
 
+  void submitExam() {
+    attempt.selectedAnswers = selectedAnswersMap.values.toList();
+    AttemptData.getInstance().save(attempt);
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ResultWidget(attempt),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    if (indexOfQuestion == 30) {
-      attempt.selectedAnswers = selectedAnswersMap.values.toList();
-      AttemptData.getInstance().save(attempt);
-    }
-
     return Scaffold(
       body: Column(
         children: [
@@ -73,7 +82,7 @@ class _QuestionListWidgetState extends State<QuestionListWidget> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Câu ${indexOfQuestion + 1}/30',
+                  'Câu ${currentQuestionIndex + 1}/${questions.length}',
                   style: TextStyle(color: Colors.orange),
                 ),
                 Text('${remainingSeconds}s'),
@@ -85,10 +94,14 @@ class _QuestionListWidgetState extends State<QuestionListWidget> {
             ),
           ),
           Expanded(
-            child: (indexOfQuestion < 30)
-                ? QuestionCardWidget(questions[indexOfQuestion], onSelect)
-                : ResultWidget(attempt),
+            child: QuestionCardWidget(questions[currentQuestionIndex], onSelect),
           ),
+          SizedBox(height: 10),
+          if (isExamCompleted)
+            ElevatedButton(
+              onPressed: submitExam,
+              child: Text('Nộp bài'),
+            ),
         ],
       ),
     );
@@ -101,7 +114,7 @@ class _QuestionListWidgetState extends State<QuestionListWidget> {
           remainingSeconds--;
         } else {
           _timer?.cancel();
-          // Có thể thêm logic khi hết giờ ở đây
+          submitExam(); // Tự động nộp bài khi hết giờ
         }
       });
     });
