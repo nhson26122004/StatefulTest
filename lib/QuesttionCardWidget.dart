@@ -16,26 +16,6 @@ class QuestionCardWidget extends StatelessWidget {
         padding: const EdgeInsets.all(10),
         child: Column(
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    'Câu ' + question.number.toString() + '/30',
-                    style: TextStyle(color: Colors.orange),
-                  ),
-                ),
-                Expanded(
-                  child: Container(
-                    padding: EdgeInsets.only(right: 10, left: 10),
-                    child: Text("01:30:00"),
-                  ),
-                ),
-                Expanded(
-                  child: ElevatedButton(
-                      onPressed: () => {}, child: Text("Báo lỗi")),
-                )
-              ],
-            ),
             SizedBox(height: 10),
             Column(
               children: [

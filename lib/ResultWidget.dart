@@ -118,7 +118,7 @@ class ResultWidget extends StatelessWidget {
   void retakeExam(BuildContext context, String examId) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => QuestionListWidget(examId)),
+      MaterialPageRoute(builder: (context) => QuestionListWidget(examId,90*60)),
     );
   }
 }

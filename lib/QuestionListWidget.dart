@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:myapp/Attempt.dart';
 import 'package:myapp/AttemptData.dart';
@@ -8,46 +9,49 @@ import 'package:myapp/ResultWidget.dart';
 import 'package:myapp/SelectedAnswer.dart';
 
 class QuestionListWidget extends StatefulWidget {
-  late String examId;
+  final String examId;
+  final int duration;
 
-  QuestionListWidget(this.examId);
+  const QuestionListWidget(this.examId, this.duration, {Key? key}) : super(key: key);
 
-// Suggested code may be subject to a license. Learn more: ~LicenseLog:3295237514.
   @override
-  State<StatefulWidget> createState() {
-    return _QuestionListWidget(examId);
-  }
+  State<QuestionListWidget> createState() => _QuestionListWidgetState();
 }
 
-class _QuestionListWidget extends State<QuestionListWidget> {
-  late List<Question> questions;
+class _QuestionListWidgetState extends State<QuestionListWidget> {
+  late List<Question> questions;// 0-29
   late Map<int, SelectedAnswer> selectedAnswersMap;
   late int indexOfQuestion;
   late Attempt attempt;
-
-  _QuestionListWidget(examId) {
-    questions = QuestionData().getQuestionsByExamId(examId);
-    selectedAnswersMap = {};
-    indexOfQuestion = 0;
-    attempt = Attempt(questions, selectedAnswersMap.values.toList(), examId);
-  }
+  late int remainingSeconds;
+  Timer? _timer;
 
   @override
   void initState() {
-    questions = QuestionData().getQuestionsByExamId(attempt.examId);
+    super.initState();
+    questions = QuestionData().getQuestionsByExamId(widget.examId);
     selectedAnswersMap = {};
     indexOfQuestion = 0;
-    super.initState();
+    attempt = Attempt(questions, [], widget.examId);
+    remainingSeconds = widget.duration;
+    _startCountdown();
   }
 
-  void onSelect(String selecteLabel, Question question) {
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  void onSelect(String selectedLabel, Question question) {
     setState(() {
       selectedAnswersMap[indexOfQuestion] = SelectedAnswer(
-          questionId: question.questionId,
-          selectedAnswer: selecteLabel,
-          examId: '',
-          isCorrect: false);
-      if (question.number < 30 + 1) {
+        questionId: question.questionId,
+        selectedAnswer: selectedLabel,
+        examId: widget.examId,
+        isCorrect: false,
+      );
+      if (indexOfQuestion < 30) {
         indexOfQuestion++;
       }
     });
@@ -61,11 +65,45 @@ class _QuestionListWidget extends State<QuestionListWidget> {
     }
 
     return Scaffold(
-      body: SafeArea(
-        child: (indexOfQuestion < 30)
-            ? QuestionCardWidget(questions[indexOfQuestion], onSelect)
-            : ResultWidget(attempt),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Câu ${indexOfQuestion + 1}/30',
+                  style: TextStyle(color: Colors.orange),
+                ),
+                Text('${remainingSeconds}s'),
+                ElevatedButton(
+                  onPressed: () {}, 
+                  child: Text("Báo lỗi"),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: (indexOfQuestion < 30)
+                ? QuestionCardWidget(questions[indexOfQuestion], onSelect)
+                : ResultWidget(attempt),
+          ),
+        ],
       ),
     );
+  }
+
+  void _startCountdown() {
+    _timer = Timer.periodic(Duration(seconds: 1), (timer) {
+      setState(() {
+        if (remainingSeconds > 0) {
+          remainingSeconds--;
+        } else {
+          _timer?.cancel();
+          // Có thể thêm logic khi hết giờ ở đây
+        }
+      });
+    });
   }
 }
