@@ -2,13 +2,15 @@ class SelectedAnswer {
   String examId;
   String questionId;
   String selectedAnswer;
-  bool isCorrect;
+  late bool isCorrect;
 
-  SelectedAnswer(
-      {required this.examId,
-      required this.questionId,
-      required this.selectedAnswer,
-      required this.isCorrect});
+  SelectedAnswer({
+    required this.examId,
+    required this.questionId,
+    required this.selectedAnswer,
+  }) {
+    this.isCorrect = false;
+  }
 
   bool isCorrectAnswer(String correctAnswer) {
     isCorrect = selectedAnswer == correctAnswer;

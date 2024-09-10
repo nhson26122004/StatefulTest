@@ -43,7 +43,7 @@ class ResultWidget extends StatelessWidget {
               ),
               SizedBox(width: 10),
               Icon(Icons.timer, color: Colors.purple),
-              Text('1:28:12')
+              Text(attempt.time)
             ],
           ),
         ),
@@ -118,7 +118,8 @@ class ResultWidget extends StatelessWidget {
   void retakeExam(BuildContext context, String examId) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => QuestionListWidget(examId,90*60)),
+      MaterialPageRoute(
+          builder: (context) => QuestionListWidget(examId, 90 * 60)),
     );
   }
 }
